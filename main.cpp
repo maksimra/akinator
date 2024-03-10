@@ -17,7 +17,7 @@ int main (void)
         }
         process_riddle (current_node);
     }
-    while (again());аы
+    while (again());
     ak_tree_print (root, file);
     return 0;
 }

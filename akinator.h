@@ -31,3 +31,4 @@ int          again          (void);
 void         read_tree      (FILE* file, Node* root);
 enum AkError my_fread       (size_t size, FILE *fp, char** buffer_ptr);
 void         read_tree      (FILE* file, Node* root, const char* file_name);
+void         skip_space     (char** line);

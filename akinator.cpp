@@ -111,9 +111,35 @@ void read_tree (FILE* file, Node* root, const char* file_name)
 {
     struct stat statbuf = {};
     char* buffer = NULL;
+    int pos = 0;
     stat (file_name, &statbuf);
     my_fread (statbuf.st_size, file, &buffer);
+    //fprintf (file, "(%s ", node->str);
+    char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
 
+    skip_space (&buffer);
+    if (strncmp (buffer[pos], '(') == 0);
+    {
+        scanf ("%s", answer);
+    }
+    insert_branch (current_node, new_object, answer);
+    if (node->left != NULL)
+        ak_tree_print (node->left, file);
+    else
+        fprintf (file, "nil ");
+    if (node->right != NULL)
+        ak_tree_print (node->right, file);
+    else
+        fprintf (file, "nil");
+    fprintf (file, ")");
+}
+
+void skip_space (char** line)
+{
+    for (size_t i = 0; isspace (**line); i++)
+    {
+        (*line)++;
+    }
 }
 
 enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr)
