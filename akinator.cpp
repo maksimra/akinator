@@ -28,11 +28,11 @@ void ak_tree_print (Node* node, FILE* file)
     if (node->left != NULL)
         ak_tree_print (node->left, file);
     else
-        fprintf (file, "nil ");
+        fprintf (file, "* ");
     if (node->right != NULL)
         ak_tree_print (node->right, file);
     else
-        fprintf (file, "nil");
+        fprintf (file, "*");
     fprintf (file, ")");
 }
 
@@ -107,7 +107,7 @@ int again (void)
         return 0;
 }
 
-void read_tree (FILE* file, Node* root, const char* file_name)
+/*void read_tree (FILE* file, Node* root, const char* file_name)
 {
     struct stat statbuf = {};
     char* buffer = NULL;
@@ -132,7 +132,7 @@ void read_tree (FILE* file, Node* root, const char* file_name)
     else
         fprintf (file, "nil");
     fprintf (file, ")");
-}
+}*/
 
 void skip_space (char** line)
 {

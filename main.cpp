@@ -7,7 +7,7 @@ int main (void)
     Node* root = (Node*) calloc (1, sizeof (Node));
     root->str = (char*) calloc (1, MAX_SYMB);
     strncpy (root->str, "Unknown who", MAX_SYMB);
-    read_tree (file, root, "akinator.txt");
+    //read_tree (file, root, "akinator.txt");
     do
     {
         Node* current_node = root;

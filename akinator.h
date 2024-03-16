@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys\stat.h>
 
 const size_t MAX_SYMB = 100;
@@ -30,5 +31,5 @@ void         set_log_file   (FILE* file);
 int          again          (void);
 void         read_tree      (FILE* file, Node* root);
 enum AkError my_fread       (size_t size, FILE *fp, char** buffer_ptr);
-void         read_tree      (FILE* file, Node* root, const char* file_name);
+// void         read_tree      (FILE* file, Node* root, const char* file_name);
 void         skip_space     (char** line);
