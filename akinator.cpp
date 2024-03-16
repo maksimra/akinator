@@ -21,11 +21,10 @@ void down_the_tree (Node** current_node)
         *current_node = (*current_node)->right;
     }
 }
-int i = 0;
+
 void ak_tree_print (Node* node, FILE* file)
 {
     fprintf (file, "(\"%.*s\"",node->len, node->str);
-    printf ("(\"%.*s\" == %d",node->len, node->str, i++);
     if (node->left != NULL)
         ak_tree_print (node->left, file);
     else
@@ -51,10 +50,10 @@ void process_riddle (Node* current_node)
         char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
         printf ("Who is it?\n");
         scanf ("%s", new_object);
-        printf ("new_object = %s\n", new_object);
+        printf ("New_object = %s\n", new_object);
         printf ("How is %s different from %.*s?\n", new_object, current_node->len, current_node->str);
         scanf ("%s", answer);
-        printf ("sign = %s\n", answer);
+        printf ("New_sign = %s\n", answer);
         insert_branch (current_node, new_object, answer);
     }
 }
@@ -69,7 +68,6 @@ AkError insert_branch (Node* node, char* new_object, char* sign)
     int prev_len  = node->len;
     node->str = sign;
     node->len = strlen (sign);
-    printf ("strlen sign = %d\n", strlen (sign));
 
     error = create_node (&right_node);
     if (error != AK_NO_ERROR)
@@ -77,7 +75,6 @@ AkError insert_branch (Node* node, char* new_object, char* sign)
     node->right = right_node;
     right_node->str = prev_str;
     right_node->len = prev_len;
-    printf ("!!!!!!!!!!prev_str = %.*s\n", right_node->len, right_node->str);
 
     error = create_node (&left_node);
     if (error != AK_NO_ERROR)
@@ -85,7 +82,6 @@ AkError insert_branch (Node* node, char* new_object, char* sign)
     node->left = left_node;
     left_node->str = new_object;
     left_node->len = strlen (new_object);
-    printf ("new object == %s\n", left_node->str);
     return AK_NO_ERROR;
 }
 
