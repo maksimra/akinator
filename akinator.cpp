@@ -21,10 +21,11 @@ void down_the_tree (Node** current_node)
         *current_node = (*current_node)->right;
     }
 }
-
+int i = 0;
 void ak_tree_print (Node* node, FILE* file)
 {
     fprintf (file, "(\"%.*s\"",node->len, node->str);
+    printf ("(\"%.*s\" == %d",node->len, node->str, i++);
     if (node->left != NULL)
         ak_tree_print (node->left, file);
     else
@@ -41,7 +42,6 @@ void process_riddle (Node* current_node)
     char* answer = (char*) calloc (MAX_SYMB, sizeof (char));
     printf ("%.*s? I am Guess?\n", current_node->len, current_node->str);
     scanf ("%s", answer);
-    printf ("answer = %s\n", answer);
     if (strncmp (answer, "Yes", MAX_SYMB) == 0)
     {
         printf ("Good bye. I am to much busy for you\n");
@@ -51,8 +51,10 @@ void process_riddle (Node* current_node)
         char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
         printf ("Who is it?\n");
         scanf ("%s", new_object);
+        printf ("new_object = %s\n", new_object);
         printf ("How is %s different from %.*s?\n", new_object, current_node->len, current_node->str);
         scanf ("%s", answer);
+        printf ("sign = %s\n", answer);
         insert_branch (current_node, new_object, answer);
     }
 }
@@ -64,20 +66,26 @@ AkError insert_branch (Node* node, char* new_object, char* sign)
     Node* left_node = (Node*) calloc (1, sizeof (Node));
 
     char* prev_str = node->str;
+    int prev_len  = node->len;
     node->str = sign;
+    node->len = strlen (sign);
+    printf ("strlen sign = %d\n", strlen (sign));
 
     error = create_node (&right_node);
     if (error != AK_NO_ERROR)
         return error;
     node->right = right_node;
     right_node->str = prev_str;
+    right_node->len = prev_len;
+    printf ("!!!!!!!!!!prev_str = %.*s\n", right_node->len, right_node->str);
 
     error = create_node (&left_node);
     if (error != AK_NO_ERROR)
         return error;
     node->left = left_node;
     left_node->str = new_object;
-    printf ("new object == %s\n", node->left->str);
+    left_node->len = strlen (new_object);
+    printf ("new object == %s\n", left_node->str);
     return AK_NO_ERROR;
 }
 
@@ -104,7 +112,7 @@ int again (void)
         return 0;
 }
 
-enum AkError read_tree (FILE* file, const char* NAME, Node* root)
+enum AkError read_tree (FILE* file, const char* NAME, Node** root)
 {
     enum AkError error = AK_NO_ERROR;
     struct stat statbuf = {};
@@ -119,22 +127,23 @@ enum AkError read_tree (FILE* file, const char* NAME, Node* root)
         return error;
 
     size_t pos = 0;
-    Node* cur_node = root;
-    create_tree (buffer, cur_node, &pos);
+    Node* cur_node = NULL;
+    create_tree (buffer, &cur_node, &pos);
+    *root = cur_node;
 }
 
-void create_tree (char* buffer, Node* cur_node, size_t* pos)
+void create_tree (char* buffer, Node** cur_node, size_t* pos)
 {
-    create_node (&(cur_node));
+    create_node (cur_node);
     char str[MAX_SYMB] = {};
     *pos += 2 * sizeof (char);
     char* pos_quotes = strchr (buffer + *pos, '\"');
-    cur_node->str = buffer + *pos;
-    cur_node->len = pos_quotes - (buffer + *pos);
+    (*cur_node)->str = buffer + *pos;
+    (*cur_node)->len = pos_quotes - (buffer + *pos);
     *pos = pos_quotes - buffer + sizeof (char);
 
     if (buffer[*pos] == '(')
-        create_tree (buffer, cur_node->left, pos);
+        create_tree (buffer, &((*cur_node)->left), pos);
 
     if (buffer[*pos] == '_')
         (*pos)++;
@@ -149,7 +158,7 @@ void create_tree (char* buffer, Node* cur_node, size_t* pos)
     }
     if (buffer[*pos] == '(')
     {
-        create_tree (buffer, cur_node->right, pos);
+        create_tree (buffer, &((*cur_node)->right), pos);
         (*pos)++;
         return;
     }

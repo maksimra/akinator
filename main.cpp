@@ -6,11 +6,7 @@ int main (const int argc, const char* argv[])
     FILE* file = fopen (NAME, "a+");
     set_log_file (file);
     Node* root = NULL;
-    read_tree (file, NAME, root);
-    printf ("len == %zu\n", root->len);
-    printf ("root == %p\n", root->str);
-    printf ("Я дздукпфлду");
-    ak_tree_print (root, file);
+    read_tree (file, NAME, &root);
     do
     {
         Node* current_node = root;
