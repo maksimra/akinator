@@ -1,1 +1,1 @@
-(Proger (Young (schoolmate (Dima nil nil)(Vova nil nil))(Ded nil nil))(best_human (Taekwondist (papa nil nil)(Mama nil nil))(my_love (schoolmate (Ksusha nil nil)(Arisha nil nil))(Fizik (Ovchinkin nil nil)(bad_guy (Putin nil nil)(Unknown who nil nil))))))
+("Proger"("Armen"("Kamo"__)("Ded"__))("Sweet"("Cat"__)("Unknown_who"__)))

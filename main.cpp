@@ -1,13 +1,16 @@
 #include "akinator.h"
 
-int main (void)
+int main (const int argc, const char* argv[])
 {
-    FILE* file = fopen ("akinator.txt", "r+");
+    const char* NAME = argv[1];
+    FILE* file = fopen (NAME, "a+");
     set_log_file (file);
-    Node* root = (Node*) calloc (1, sizeof (Node));
-    root->str = (char*) calloc (1, MAX_SYMB);
-    strncpy (root->str, "Unknown who", MAX_SYMB);
-    //read_tree (file, root, "akinator.txt");
+    Node* root = NULL;
+    read_tree (file, NAME, root);
+    printf ("len == %zu\n", root->len);
+    printf ("root == %p\n", root->str);
+    printf ("Я дздукпфлду");
+    ak_tree_print (root, file);
     do
     {
         Node* current_node = root;
