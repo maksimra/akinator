@@ -7,40 +7,66 @@ void set_log_file (FILE* file)
     log_file = file;
 }
 
-void down_the_tree (Node** current_node)
+void is_that_true (Node** current_node)
 {
-    char answer[MAX_SYMB];
     printf ("%.*s?\n", (*current_node)->len, (*current_node)->str);
-    scanf ("%s", answer);
+}
+
+enum AkError ask_questions (Node** current_node)
+{
+    char answer[MAX_SYMB] = {};
+
+    is_that_true (current_node);
+
+    fgets (answer, MAX_SYMB, stdin);
+    
     if (strncmp (answer, "Yes", MAX_SYMB) == 0)
     {
         *current_node = (*current_node)->left;
     }
-    else
+    else if (strncmp (answer, "No", MAX_SYMB))
     {
         *current_node = (*current_node)->right;
     }
+    else
+    {
+        return AK_INCORRECT_ANSWER;
+    }
+}
+
+void printf_str (FILE* file, Node* node)
+{
+    fprintf (file, "(\"%.*s\"",node->len, node->str);
+}
+
+void printing_branches (Node* node, FILE* file)
+{
+    if (node != NULL)
+        ak_tree_print (node, file);
+    else
+        fprintf (file, "_");
 }
 
 void ak_tree_print (Node* node, FILE* file)
 {
-    fprintf (file, "(\"%.*s\"",node->len, node->str);
-    if (node->left != NULL)
-        ak_tree_print (node->left, file);
-    else
-        fprintf (file, "_");
-    if (node->right != NULL)
-        ak_tree_print (node->right, file);
-    else
-        fprintf (file, "_");
+    printf_str (file, node);
+
+    printing_branches (node->left, file);
+    printing_branches (node->right, file);
+
     fprintf (file, ")");
 }
 
-void process_riddle (Node* current_node)
+enum AkError process_riddle (Node* current_node)
 {
     char* answer = (char*) calloc (MAX_SYMB, sizeof (char));
-    printf ("%.*s? I am Guess?\n", current_node->len, current_node->str);
-    scanf ("%s", answer);
+
+    if (answer == NULL)
+        return AK_ERROR_CALLOC;
+
+    printf ("%.*s? Did I guess right?\n", current_node->len, current_node->str);
+
+    fgets (answer, MAX_SYMB, stdin);
     if (strncmp (answer, "Yes", MAX_SYMB) == 0)
     {
         printf ("Good bye. I am to much busy for you\n");
@@ -185,8 +211,8 @@ enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr)
     for (size_t i = 0; i < size && (temp = fgetc (fp)) != EOF; i++)
     {
         buffer[i] = (char) temp;
-        continue;
     }
+
     if (fseek (fp, position, SEEK_SET) != 0)
         return AK_ERROR_FSEEK;
 
