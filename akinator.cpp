@@ -12,19 +12,20 @@ void is_that_true (Node** current_node)
     printf ("%.*s?\n", (*current_node)->len, (*current_node)->str);
 }
 
-enum AkError ask_questions (Node** current_node)
+enum AkError object_search (Node** current_node)
 {
     char answer[MAX_SYMB] = {};
 
     is_that_true (current_node);
 
-    fgets (answer, MAX_SYMB, stdin);
-    
-    if (strncmp (answer, "Yes", MAX_SYMB) == 0)
+    if (fgets (answer, MAX_SYMB, stdin) == NULL)
+        return AK_FGETS_ERROR;
+
+    if (strncmp (answer, "Yes", strlen ("Yes")) == 0)
     {
         *current_node = (*current_node)->left;
     }
-    else if (strncmp (answer, "No", MAX_SYMB))
+    else if (strncmp (answer, "No", strlen ("No")) == 0)
     {
         *current_node = (*current_node)->right;
     }
@@ -57,34 +58,66 @@ void ak_tree_print (Node* node, FILE* file)
     fprintf (file, ")");
 }
 
-enum AkError process_riddle (Node* current_node)
+int ask_and_proc_answer (const char* str)
 {
+    printf ("Did I guess right?\n");
+
     char* answer = (char*) calloc (MAX_SYMB, sizeof (char));
 
     if (answer == NULL)
-        return AK_ERROR_CALLOC;
+        return -1;
 
-    printf ("%.*s? Did I guess right?\n", current_node->len, current_node->str);
+    if (fgets (answer, MAX_SYMB, stdin) == NULL)
+        return -1;
 
-    fgets (answer, MAX_SYMB, stdin);
     if (strncmp (answer, "Yes", MAX_SYMB) == 0)
+        return true;
+
+    if (strncmp (answer, "No", MAX_SYMB) == 0)
+        return false;
+
+    return -1;
+}
+
+enum AkError process_riddle (Node* current_node)
+{
+    printf ("%.*s? ", current_node->len, current_node->str);
+
+    int answer = ask_and_proc_answer ("Did I guess right?\n");
+
+    if (answer == -1)
+        return AK_PROC_ANSWER_ERROR;
+
+    if (answer == true)
     {
-        printf ("Good bye. I am to much busy for you\n");
+        printf ("See you soon\n");
     }
     else
     {
         char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
+        char* sign = (char*) calloc (MAX_SYMB, sizeof (char));
+
+        if (new_object == NULL || sign == NULL)
+            return AK_ERROR_CALLOC;
+
         printf ("Who is it?\n");
-        scanf ("%s", new_object);
-        printf ("New_object = %s\n", new_object);
+
+        if (fgets (new_object, MAX_SYMB, stdin) == NULL)
+            return AK_FGETS_ERROR;
+
+        fprintf (log_file, "New_object = %s\n", new_object);
         printf ("How is %s different from %.*s?\n", new_object, current_node->len, current_node->str);
-        scanf ("%s", answer);
-        printf ("New_sign = %s\n", answer);
-        insert_branch (current_node, new_object, answer);
+
+        if (fgets (sign, MAX_SYMB, stdin) == NULL)
+            return AK_FGETS_ERROR;
+
+        fprintf (log_file, "New_sign = %s\n", sign);
+
+        insert_branch (current_node, new_object, sign);
     }
 }
 
-AkError insert_branch (Node* node, char* new_object, char* sign)
+enum AkError insert_branch (Node* node, char* new_object, char* sign)
 {
     AkError error = AK_NO_ERROR;
     Node* right_node = (Node*) calloc (1, sizeof (Node));

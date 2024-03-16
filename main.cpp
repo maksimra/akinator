@@ -13,7 +13,7 @@ int main (const int argc, const char* argv[])
         Node* current_node = root;
         while (current_node->left != NULL && current_node->right != NULL)
         {
-            error = ask_questions (&current_node);
+            error = object_search (&current_node);
         }
         process_riddle (current_node);
     }
