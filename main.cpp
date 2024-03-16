@@ -2,6 +2,7 @@
 
 int main (const int argc, const char* argv[])
 {
+    enum AkError error = AK_NO_ERROR;
     const char* NAME = argv[1];
     FILE* file = fopen (NAME, "a+");
     set_log_file (file);
@@ -12,7 +13,7 @@ int main (const int argc, const char* argv[])
         Node* current_node = root;
         while (current_node->left != NULL && current_node->right != NULL)
         {
-            down_the_tree (&current_node);
+            error = ask_questions (&current_node);
         }
         process_riddle (current_node);
     }
