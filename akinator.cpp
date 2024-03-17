@@ -116,7 +116,7 @@ enum AkError process_riddle (Node* current_node)
 
         fprintf (log_file, "New_sign = %s\n", sign);
 
-        insert_branch (current_node, new_object, sign);
+        insert_branch (current_node, new_object, sign); //
     }
 }
 
