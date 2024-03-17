@@ -1,4 +1,1 @@
-do.exe
-akinator.txt
-.gitignore
-.gitattributes
+*.exe
