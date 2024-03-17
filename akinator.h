@@ -42,3 +42,4 @@ void         create_tree         (char* buffer, Node** cur_node, size_t* pos);
 void         is_that_true        (Node** current_node);
 void         printf_str          (FILE* file, Node* node);
 int          ask_and_proc_answer (const char* str);
+enum AkError replace_node        (Node** node, char* str, int len);

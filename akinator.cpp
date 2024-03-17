@@ -21,11 +21,11 @@ enum AkError object_search (Node** current_node)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return AK_FGETS_ERROR;
 
-    if (strncmp (answer, "Yes", strlen ("Yes")) == 0)
+    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0)
     {
         *current_node = (*current_node)->left;
     }
-    else if (strncmp (answer, "No", strlen ("No")) == 0)
+    else if (strncmp (answer, "No\n", MAX_SYMB) == 0)
     {
         *current_node = (*current_node)->right;
     }
@@ -38,6 +38,7 @@ enum AkError object_search (Node** current_node)
 void printf_str (FILE* file, Node* node)
 {
     fprintf (file, "(\"%.*s\"",node->len, node->str);
+    printf ("(\"%.*s\"",node->len, node->str);
 }
 
 void printing_branches (Node* node, FILE* file)
@@ -70,10 +71,10 @@ int ask_and_proc_answer (const char* str)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return -1;
 
-    if (strncmp (answer, "Yes", MAX_SYMB) == 0)
+    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0)
         return true;
 
-    if (strncmp (answer, "No", MAX_SYMB) == 0)
+    if (strncmp (answer, "No\n", MAX_SYMB) == 0)
         return false;
 
     return -1;
@@ -86,7 +87,9 @@ enum AkError process_riddle (Node* current_node)
     int answer = ask_and_proc_answer ("Did I guess right?\n");
 
     if (answer == -1)
+    {
         return AK_PROC_ANSWER_ERROR;
+    }
 
     if (answer == true)
     {
@@ -106,7 +109,7 @@ enum AkError process_riddle (Node* current_node)
             return AK_FGETS_ERROR;
 
         fprintf (log_file, "New_object = %s\n", new_object);
-        printf ("How is %s different from %.*s?\n", new_object, current_node->len, current_node->str);
+        printf ("How is %.*s different from %.*s?\n", strlen (new_object) - 1, new_object, current_node->len, current_node->str);
 
         if (fgets (sign, MAX_SYMB, stdin) == NULL)
             return AK_FGETS_ERROR;
@@ -120,30 +123,40 @@ enum AkError process_riddle (Node* current_node)
 enum AkError insert_branch (Node* node, char* new_object, char* sign)
 {
     AkError error = AK_NO_ERROR;
-    Node* right_node = (Node*) calloc (1, sizeof (Node));
-    Node* left_node = (Node*) calloc (1, sizeof (Node));
 
     char* prev_str = node->str;
     int prev_len  = node->len;
+
     node->str = sign;
-    node->len = strlen (sign);
+    node->len = strlen (sign) - sizeof (char); // для \n
 
-    error = create_node (&right_node);
+    error = replace_node (&(node->right), prev_str, prev_len); // понять, почему так
+
     if (error != AK_NO_ERROR)
         return error;
-    node->right = right_node;
-    right_node->str = prev_str;
-    right_node->len = prev_len;
 
-    error = create_node (&left_node);
+    error = replace_node (&(node->left), new_object, strlen (new_object) - sizeof (char));
+
+    printf ("node->str == %.*s\n", node->len, node->str);
+    printf ("node->right->str == %.*s\n", node->right->len, node->right->str);
+    printf ("node->left->str == %.*s\n", node->left->len, node->left->str);
+
     if (error != AK_NO_ERROR)
         return error;
-    node->left = left_node;
-    left_node->str = new_object;
-    left_node->len = strlen (new_object);
+
     return AK_NO_ERROR;
 }
 
+enum AkError replace_node (Node** node, char* str, int len)
+{
+    AkError error = AK_NO_ERROR;
+    *node = (Node*) calloc (1, sizeof (Node));
+    if (error != AK_NO_ERROR)
+        return error;
+    (*node)->str = str;
+    (*node)->len = len;
+    return AK_NO_ERROR;
+}
 
 AkError create_node (Node** node)
 {
