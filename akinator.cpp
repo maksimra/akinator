@@ -21,7 +21,7 @@ enum AkError object_search (Node** current_node)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return AK_FGETS_ERROR;
 
-    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0)
+    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0) // создать константу поменьше локальную
     {
         *current_node = (*current_node)->left;
     }
@@ -63,7 +63,7 @@ int ask_and_proc_answer (const char* str)
 {
     printf ("Did I guess right?\n");
 
-    char* answer = (char*) calloc (MAX_SYMB, sizeof (char));
+    char* answer = (char*) calloc (MAX_SYMB, sizeof (char)); // не через динамику
 
     if (answer == NULL)
         return -1;
@@ -71,7 +71,7 @@ int ask_and_proc_answer (const char* str)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return -1;
 
-    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0)
+    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0) // функция, которая обрабатывает да или нет
         return true;
 
     if (strncmp (answer, "No\n", MAX_SYMB) == 0)
@@ -82,18 +82,16 @@ int ask_and_proc_answer (const char* str)
 
 enum AkError process_riddle (Node* current_node)
 {
-    printf ("%.*s? ", current_node->len, current_node->str);
+    printf ("%.*s? ", current_node->len, current_node->str); // ассерты для входных параметров
 
     int answer = ask_and_proc_answer ("Did I guess right?\n");
 
     if (answer == -1)
-    {
         return AK_PROC_ANSWER_ERROR;
-    }
 
     if (answer == true)
     {
-        printf ("See you soon\n");
+        printf ("See you soon\n"); // return + delete else
     }
     else
     {
@@ -105,18 +103,18 @@ enum AkError process_riddle (Node* current_node)
 
         printf ("Who is it?\n");
 
-        if (fgets (new_object, MAX_SYMB, stdin) == NULL)
+        if (fgets (new_object, MAX_SYMB, stdin) == NULL) // вручную занулить последний символ
             return AK_FGETS_ERROR;
 
-        fprintf (log_file, "New_object = %s\n", new_object);
+        fprintf (log_file, "New_object = %s\n", new_object); // научиться переносить
         printf ("How is %.*s different from %.*s?\n", strlen (new_object) - 1, new_object, current_node->len, current_node->str);
 
-        if (fgets (sign, MAX_SYMB, stdin) == NULL)
+        if (fgets (sign, MAX_SYMB, stdin) == NULL) // property
             return AK_FGETS_ERROR;
 
         fprintf (log_file, "New_sign = %s\n", sign);
 
-        insert_branch (current_node, new_object, sign); //
+        insert_branch (current_node, new_object, sign); // rename
     }
 }
 
@@ -130,7 +128,7 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
     node->str = sign;
     node->len = strlen (sign) - sizeof (char); // для \n
 
-    error = replace_node (&(node->right), prev_str, prev_len); // понять, почему так
+    error = replace_node (&(node->right), prev_str, prev_len);
 
     if (error != AK_NO_ERROR)
         return error;
@@ -150,7 +148,7 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
 enum AkError replace_node (Node** node, char* str, int len)
 {
     AkError error = AK_NO_ERROR;
-    *node = (Node*) calloc (1, sizeof (Node));
+    *node = (Node*) calloc (1, sizeof (Node)); // исправить
     if (error != AK_NO_ERROR)
         return error;
     (*node)->str = str;
@@ -160,7 +158,7 @@ enum AkError replace_node (Node** node, char* str, int len)
 
 AkError create_node (Node** node)
 {
-    Node* temp = (Node*) calloc (1, sizeof (Node));
+    Node* temp = (Node*) calloc (1, sizeof (Node)); // использовать в функции выше
     if (temp == NULL)
         return AK_ERROR_CALLOC;
     *node = temp;
@@ -171,7 +169,7 @@ int again (void)
 {
     char answer[MAX_SYMB] = {};
     printf ("Again?\n");
-    scanf ("%s", answer);
+    scanf ("%s", answer); // fgets - если теряет информацию - сообщать
     if (strncmp (answer, "Yes", MAX_SYMB) == 0)
     {
         return 1;
@@ -189,7 +187,7 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root)
     if (stat (NAME, &statbuf))
         return AK_ERROR_STAT;
 
-    error = my_fread (statbuf.st_size, file, &buffer);
+    error = my_fread (statbuf.st_size, file, &buffer); // тут хорошо функция зайдёт
 
     if (error != AK_NO_ERROR)
         return error;
@@ -205,13 +203,13 @@ void create_tree (char* buffer, Node** cur_node, size_t* pos)
     create_node (cur_node);
     char str[MAX_SYMB] = {};
     *pos += 2 * sizeof (char);
-    char* pos_quotes = strchr (buffer + *pos, '\"');
-    (*cur_node)->str = buffer + *pos;
+    char* pos_quotes = strchr (buffer + *pos, '\"'); // если после скобки не ковычка - ошибка
+    (*cur_node)->str = buffer + *pos; // можно \0 ковычку, чтобы длиной не пользоваться так часто
     (*cur_node)->len = pos_quotes - (buffer + *pos);
     *pos = pos_quotes - buffer + sizeof (char);
 
-    if (buffer[*pos] == '(')
-        create_tree (buffer, &((*cur_node)->left), pos);
+    if (buffer[*pos] == '(') // проверяю, что текущий символ откр скобка - если нет - ошибка (или выходить из функции - тогда не нужны нижние подчеркивания)
+        create_tree (buffer, &((*cur_node)->left), pos); //  потом искать ковычки
 
     if (buffer[*pos] == '_')
         (*pos)++;
@@ -234,13 +232,13 @@ void create_tree (char* buffer, Node** cur_node, size_t* pos)
 
 void skip_space (char** line)
 {
-    for (size_t i = 0; isspace (**line); i++)
+    for (size_t i = 0; isspace (**line); i++) // переделать
     {
         (*line)++;
     }
 }
 
-enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr)
+enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr) // заменить на обычный fread
 {
     if (fp == NULL)
         return AK_NULL_PTR_FILE;
@@ -251,8 +249,10 @@ enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr)
 
     *buffer_ptr = buffer;
     int position = ftell (fp);
+
     if (fseek (fp, 0, SEEK_SET) != 0)
         return AK_ERROR_FSEEK;
+
     int temp = 0;
     for (size_t i = 0; i < size && (temp = fgetc (fp)) != EOF; i++)
     {
