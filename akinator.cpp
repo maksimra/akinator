@@ -61,7 +61,7 @@ void ak_tree_print (Node* node, FILE* file)
 
 int ask_and_proc_answer (const char* str)
 {
-    printf ("Did I guess right?\n");
+    printf ("%s", str);
 
     char* answer = (char*) calloc (MAX_SYMB, sizeof (char)); // не через динамику
 
@@ -107,7 +107,7 @@ enum AkError process_riddle (Node* current_node)
             return AK_FGETS_ERROR;
 
         fprintf (log_file, "New_object = %s\n", new_object); // научиться переносить
-        printf ("How is %.*s different from %.*s?\n", strlen (new_object) - 1, new_object, current_node->len, current_node->str);
+        printf ("How is %.*s different from %.*s?\n", (int) (strlen (new_object) - 1), new_object, current_node->len, current_node->str);
 
         if (fgets (sign, MAX_SYMB, stdin) == NULL) // property
             return AK_FGETS_ERROR;
@@ -126,14 +126,14 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
     int prev_len  = node->len;
 
     node->str = sign;
-    node->len = strlen (sign) - sizeof (char); // для \n
+    node->len = (int) (strlen (sign) - sizeof (char)); // для \n
 
     error = replace_node (&(node->right), prev_str, prev_len);
 
     if (error != AK_NO_ERROR)
         return error;
 
-    error = replace_node (&(node->left), new_object, strlen (new_object) - sizeof (char));
+    error = replace_node (&(node->left), new_object, (int) (strlen (new_object) - sizeof (char)));
 
     printf ("node->str == %.*s\n", node->len, node->str);
     printf ("node->right->str == %.*s\n", node->right->len, node->right->str);

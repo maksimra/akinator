@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 
 const int MAX_SYMB = 100;
@@ -43,3 +43,4 @@ void         is_that_true        (Node** current_node);
 void         printf_str          (FILE* file, Node* node);
 int          ask_and_proc_answer (const char* str);
 enum AkError replace_node        (Node** node, char* str, int len);
+void         printing_branches   (Node* node, FILE* file);
