@@ -1,7 +1,2 @@
 ("Proger"("Young"("Kolya"__)("Ded"__))("Sweet"("Cat"__)("Unknown_who"__)))
 // не в одну строку!!!
-New_object = Konfeta
-
-New_sign = Sladkaia
-
-("Proger"("Young"("Kolya"__)("Ded"__))("Sweet"("Sladkaia"("Konfeta"__)("Cat"__))("Unknown_who"__)))

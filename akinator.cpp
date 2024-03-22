@@ -33,6 +33,8 @@ enum AkError object_search (Node** current_node)
     {
         return AK_INCORRECT_ANSWER;
     }
+
+    return AK_NO_ERROR;
 }
 
 void printf_str (FILE* file, Node* node)
@@ -63,10 +65,7 @@ int ask_and_proc_answer (const char* str)
 {
     printf ("%s", str);
 
-    char* answer = (char*) calloc (MAX_SYMB, sizeof (char)); // не через динамику
-
-    if (answer == NULL)
-        return -1;
+    char answer[MAX_SYMB] = {}; // не через динамику
 
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return -1;
@@ -116,6 +115,7 @@ enum AkError process_riddle (Node* current_node)
 
         insert_branch (current_node, new_object, sign); // rename
     }
+    return AK_NO_ERROR;
 }
 
 enum AkError insert_branch (Node* node, char* new_object, char* sign)
@@ -125,8 +125,9 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
     char* prev_str = node->str;
     int prev_len  = node->len;
 
+    node->existed = false;
     node->str = sign;
-    node->len = (int) (strlen (sign) - sizeof (char)); // для \n
+    node->len = strlen (sign) - sizeof (char); // для \n
 
     error = replace_node (&(node->right), prev_str, prev_len);
 
@@ -134,6 +135,7 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
         return error;
 
     error = replace_node (&(node->left), new_object, (int) (strlen (new_object) - sizeof (char)));
+    node->left->existed = false;
 
     printf ("node->str == %.*s\n", node->len, node->str);
     printf ("node->right->str == %.*s\n", node->right->len, node->right->str);
@@ -178,24 +180,30 @@ int again (void)
         return 0;
 }
 
-enum AkError read_tree (FILE* file, const char* NAME, Node** root)
+enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer)
 {
     enum AkError error = AK_NO_ERROR;
     struct stat statbuf = {};
-    char* buffer = NULL;
 
     if (stat (NAME, &statbuf))
         return AK_ERROR_STAT;
 
-    error = my_fread (statbuf.st_size, file, &buffer); // тут хорошо функция зайдёт
+    size_t size = 0;
+
+    size = fread (buffer, sizeof (char), statbuf.st_size, file); // тут хорошо функция зайдёт
+    assert (size == statbuf.st_size);
+    if (size != statbuf.st_size)
+        return AK_ERROR_FREAD;
 
     if (error != AK_NO_ERROR)
         return error;
 
     size_t pos = 0;
     Node* cur_node = NULL;
-    create_tree (buffer, &cur_node, &pos);
+    create_tree ((*buffer), &cur_node, &pos);
+    printf ("cur_node == %p\n", cur_node);
     *root = cur_node;
+    return AK_NO_ERROR;
 }
 
 void create_tree (char* buffer, Node** cur_node, size_t* pos)
@@ -206,6 +214,7 @@ void create_tree (char* buffer, Node** cur_node, size_t* pos)
     char* pos_quotes = strchr (buffer + *pos, '\"'); // если после скобки не ковычка - ошибка
     (*cur_node)->str = buffer + *pos; // можно \0 ковычку, чтобы длиной не пользоваться так часто
     (*cur_node)->len = pos_quotes - (buffer + *pos);
+    (*cur_node)->existed = true;
     *pos = pos_quotes - buffer + sizeof (char);
 
     if (buffer[*pos] == '(') // проверяю, что текущий символ откр скобка - если нет - ошибка (или выходить из функции - тогда не нужны нижние подчеркивания)
@@ -238,29 +247,54 @@ void skip_space (char** line)
     }
 }
 
-enum AkError my_fread (size_t size, FILE *fp, char** buffer_ptr) // заменить на обычный fread
+void tree_dtor (Node* root)
 {
-    if (fp == NULL)
-        return AK_NULL_PTR_FILE;
+    assert (root != NULL);
 
-    char* buffer = (char*) calloc (size + 1, sizeof (char));
-    if (buffer == NULL)
-        return AK_CALLOC_FAIL;
+    printf ("PPPPPPPPPPPPPP\n");
 
-    *buffer_ptr = buffer;
-    int position = ftell (fp);
+    if (root->left != NULL)
+        tree_dtor (root->left);
 
-    if (fseek (fp, 0, SEEK_SET) != 0)
-        return AK_ERROR_FSEEK;
+    if (root->right != NULL)
+        tree_dtor (root->right);
 
-    int temp = 0;
-    for (size_t i = 0; i < size && (temp = fgetc (fp)) != EOF; i++)
+    printf ("Фришу память: root->existed == %d, root->str = %.*s\n", root->existed, root->len, root->str);
+
+    if (root->existed == false)
+        free (root->str);
+    free (root);
+
+}
+
+const char* get_error (enum AkError error)
+{
+    switch (error)
     {
-        buffer[i] = (char) temp;
+        case AK_NO_ERROR:
+            return "Ak: Ошибок в работе функций не выявлено.";
+        case AK_NULL_PTR_FILE:
+            return "Ak: Передан нулевой указатель на файл.";
+        case AK_ERROR_FSEEK:
+            return "Ak: Ошибка в работе функции fseek.";
+        case AK_FGETS_ERROR:
+            return "Ak: Ошибка в работе функции fgets.";
+        case AK_ERROR_STAT:
+            return "Ak: Ошибка в работе функции stat.";
+        case AK_INCORRECT_ANSWER:
+            return "Ak: Введён некорректный ответ.";
+        case AK_ERROR_CALLOC:
+            return "Ak: Ошибка в выделении памяти (calloc).";
+        case AK_PROC_ANSWER_ERROR:
+            return "Ak: Ошибка обработки ответа.";
+        case AK_ERROR_FREAD:
+            return "Ak: Ошибка чтения из файла.";
+        default:
+            return "Ak: Куда делся мой enum ошибок?";
     }
+}
 
-    if (fseek (fp, position, SEEK_SET) != 0)
-        return AK_ERROR_FSEEK;
-
-    return AK_NO_ERROR;
+void print_error (enum AkError error)
+{
+    fprintf (log_file, "%s\n", get_error (error));
 }
