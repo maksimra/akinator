@@ -1,2 +1,1 @@
 ("Proger"("Young"("Kolya"__)("Ded"__))("Sweet"("Cat"__)("Unknown_who"__)))
-// не в одну строку!!!

@@ -15,6 +15,7 @@ void is_that_true (Node** current_node)
 enum AkError object_search (Node** current_node)
 {
     char answer[MAX_SYMB] = {};
+    const int n_answer = 4;
 
     is_that_true (current_node);
 
@@ -91,30 +92,30 @@ enum AkError process_riddle (Node* current_node)
     if (answer == true)
     {
         printf ("See you soon\n"); // return + delete else
+        return AK_NO_ERROR;
     }
-    else
-    {
-        char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
-        char* sign = (char*) calloc (MAX_SYMB, sizeof (char));
 
-        if (new_object == NULL || sign == NULL)
-            return AK_ERROR_CALLOC;
+    char* new_object = (char*) calloc (MAX_SYMB, sizeof (char));
+    char* sign = (char*) calloc (MAX_SYMB, sizeof (char));
 
-        printf ("Who is it?\n");
+    if (new_object == NULL || sign == NULL)
+        return AK_ERROR_CALLOC;
 
-        if (fgets (new_object, MAX_SYMB, stdin) == NULL) // вручную занулить последний символ
-            return AK_FGETS_ERROR;
+    printf ("Who is it?\n");
 
-        fprintf (log_file, "New_object = %s\n", new_object); // научиться переносить
-        printf ("How is %.*s different from %.*s?\n", (int) (strlen (new_object) - 1), new_object, current_node->len, current_node->str);
+    if (fgets (new_object, MAX_SYMB, stdin) == NULL) // вручную занулить последний символ
+        return AK_FGETS_ERROR;
 
-        if (fgets (sign, MAX_SYMB, stdin) == NULL) // property
-            return AK_FGETS_ERROR;
+    fprintf (log_file, "New_object = %s\n", new_object); // научиться переносить
+    printf ("How is %.*s different from %.*s?\n", (int) (strlen (new_object) - 1), new_object, current_node->len, current_node->str);
 
-        fprintf (log_file, "New_sign = %s\n", sign);
+    if (fgets (sign, MAX_SYMB, stdin) == NULL) // property
+        return AK_FGETS_ERROR;
 
-        insert_branch (current_node, new_object, sign); // rename
-    }
+    fprintf (log_file, "New_sign = %s\n", sign);
+
+    insert_branch (current_node, new_object, sign); // rename
+
     return AK_NO_ERROR;
 }
 
@@ -130,6 +131,7 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
     node->len = strlen (sign) - sizeof (char); // для \n
 
     error = replace_node (&(node->right), prev_str, prev_len);
+    node->right->existed = true;
 
     if (error != AK_NO_ERROR)
         return error;
@@ -188,9 +190,11 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
     if (stat (NAME, &statbuf))
         return AK_ERROR_STAT;
 
+    *buffer = (char*) calloc (statbuf.st_size, sizeof (char));
+
     size_t size = 0;
 
-    size = fread (buffer, sizeof (char), statbuf.st_size, file); // тут хорошо функция зайдёт
+    size = fread (*buffer, sizeof (char), statbuf.st_size, file); // тут хорошо функция зайдёт
     assert (size == statbuf.st_size);
     if (size != statbuf.st_size)
         return AK_ERROR_FREAD;
@@ -251,15 +255,11 @@ void tree_dtor (Node* root)
 {
     assert (root != NULL);
 
-    printf ("PPPPPPPPPPPPPP\n");
-
     if (root->left != NULL)
         tree_dtor (root->left);
 
     if (root->right != NULL)
         tree_dtor (root->right);
-
-    printf ("Фришу память: root->existed == %d, root->str = %.*s\n", root->existed, root->len, root->str);
 
     if (root->existed == false)
         free (root->str);
