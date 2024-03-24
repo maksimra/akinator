@@ -23,14 +23,14 @@ enum AkError object_search (Node** current_node)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return AK_FGETS_ERROR;
 
-    if (strlen (answer) >= n_answ)
+    if (strlen (answer) > n_answ)
             printf ("Некорректный ответ. Часть информации утеряна.\n");
 
     if (strncmp (answer, "Yes\n", n_answ) == 0) // создать константу поменьше локальную
     {
         *current_node = (*current_node)->left;
     }
-    else if (strncmp (answer, "No\n", MAX_SYMB) == 0)
+    else if (strncmp (answer, "No\n", n_answ) == 0)
     {
         *current_node = (*current_node)->right;
     }
@@ -45,7 +45,6 @@ enum AkError object_search (Node** current_node)
 void printf_str (FILE* file, Node* node, int n_space)
 {
     fprintf (file, "%*c(\"%.*s\"\n", n_space, ' ', node->len, node->str);
-    printf ("(\"%.*s\"",node->len, node->str);
 }
 
 void printing_branches (Node* node, FILE* file, int* n_space)
@@ -58,6 +57,62 @@ void printing_branches (Node* node, FILE* file, int* n_space)
     {
         fprintf (file, "_");
         (*n_space) -= 4;
+    }
+}
+
+void print_start (FILE* file)
+{
+    fprintf (file, "graph G {\n");
+}
+
+void print_end (FILE* file)
+{
+    fprintf (file, "}");
+}
+
+void print_filling (Node* node, FILE* file)
+{
+    draw_left (node, file);
+    draw_right (node, file);
+}
+
+void graphviz (Node* node, FILE* file)
+{
+    assert (node != NULL);
+    assert (file != NULL);
+
+    print_start (file);
+
+    print_filling (node, file);
+
+    print_end (file);
+}
+
+void draw_right (Node* node, FILE* file)
+{
+    if (node->right != NULL)
+    {
+        char* color = NULL;
+        if (node->right->left == NULL && node->right->right == NULL)
+            color = "red";
+        else
+            color = "green";
+        fprintf (file, "\"%.*s\"--\"%.*s\"[label=\"Нет\", color = \"%s\"];\n", node->len, node->str, node->right->len, node->right->str, color);
+        print_filling (node->right, file);
+    }
+}
+
+void draw_left (Node* node, FILE* file)
+{
+    if (node->left != NULL)
+    {
+        char* color = NULL;
+        if (node->left->left == NULL && node->left->right == NULL)
+            color = "red";
+        else
+            color = "green";
+        fprintf (file, "\"%.*s\"--\"%.*s\"[label=\"Да\", color = \"%s\"];\n", node->len, node->str, node->left->len, node->left->str, color);
+        print_filling (node->left, file);
     }
 }
 
@@ -81,10 +136,10 @@ int ask_and_proc_answer (const char* str)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return -1;
 
-    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0) // функция, которая обрабатывает да или нет
+    if (strncmp (answer, "Yes\n", n_answ) == 0) // функция, которая обрабатывает да или нет
         return true;
 
-    if (strncmp (answer, "No\n", MAX_SYMB) == 0)
+    if (strncmp (answer, "No\n", n_answ) == 0)
         return false;
 
     return -1;
@@ -153,10 +208,6 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
     error = replace_node (&(node->left), new_object, (int) (strlen (new_object) - sizeof (char)));
     node->left->existed = false;
 
-    printf ("node->str == %.*s\n", node->len, node->str);
-    printf ("node->right->str == %.*s\n", node->right->len, node->right->str);
-    printf ("node->left->str == %.*s\n", node->left->len, node->left->str);
-
     if (error != AK_NO_ERROR)
         return error;
 
@@ -168,9 +219,11 @@ enum AkError replace_node (Node** node, char* str, int len)
     assert (str != NULL);
 
     AkError error = AK_NO_ERROR;
-    *node = (Node*) calloc (1, sizeof (Node)); // исправить
-    if (error != AK_NO_ERROR)
-        return error;
+    *node = (Node*) calloc (1, sizeof (Node));
+
+    if (*node == NULL)
+        return AK_ERROR_CALLOC;
+
     (*node)->str = str;
     (*node)->len = len;
     return AK_NO_ERROR;
@@ -228,7 +281,6 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
     if (error != AK_NO_ERROR)
         return error;
 
-    printf ("cur_node == %p\n", cur_node);
     *root = cur_node;
     return AK_NO_ERROR;
 }
@@ -246,42 +298,33 @@ enum AkError create_tree (char* buffer, Node** cur_node, int* pos)
 
     if (buffer[*pos] != '(')
     {
-        printf ("HUUUUI\n");
         return AK_ERROR_READ;
     }
 
     (*pos)++;
-
-    printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
 
     if (buffer[*pos] != '\"')
         return AK_ERROR_READ;
 
     (*pos)++;
 
-    char* pos_quotes = strchr (buffer + *pos, '\"'); // если после скобки не ковычка - ошибка
+    char* pos_quotes = strchr (buffer + *pos, '\"');
 
     if (pos_quotes == NULL)
         return AK_ERROR_READ;
 
-    (*cur_node)->str = buffer + *pos; // можно \0 ковычку, чтобы длиной не пользоваться так часто
+    (*cur_node)->str = buffer + *pos;
     (*cur_node)->len = pos_quotes - (buffer + *pos);
     (*cur_node)->existed = true;
     *pos = pos_quotes - buffer + sizeof (char);
-    printf ("pos = %d\n", *pos);
-    printf ("HUUUUI\n");
-
-    printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
 
     *pos += skip_space (buffer + *pos);
 
-    if (buffer[*pos] == '(') // проверяю, что текущий символ откр скобка - если нет - ошибка (или выходить из функции - тогда не нужны нижние подчеркивания)
+    if (buffer[*pos] == '(')
     {
-        printf ("HUUUUI\n");
-        error = create_tree (buffer, &((*cur_node)->left), pos); //  потом искать ковычки
+        error = create_tree (buffer, &((*cur_node)->left), pos);
         if (error != AK_NO_ERROR)
         {
-            printf ("chbck");
             return AK_ERROR_READ;
         }
     }
@@ -297,23 +340,13 @@ enum AkError create_tree (char* buffer, Node** cur_node, int* pos)
     {
         (*pos)++;
         *pos += skip_space (buffer + *pos);
-        printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
-        printf ("chack");
-        printf ("pos == %d\n", *pos);
         return error;
     }
     if (buffer[*pos] == '(')
     {
         error = create_tree (buffer, &((*cur_node)->right), pos);
-        printf ("pos == %d\n", *pos);
         (*pos)++;
-        printf ("pos == %d\n", *pos);
         *pos += skip_space (buffer + *pos);
-        printf ("pos == %d\n", *pos);
-        printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
-        printf ("Я здееееееееееесь\n");
-        printf ("cur_node->str = %.*s\n", (*cur_node)->len, (*cur_node)->str);
-        printf ("size = %");
         return error;
     }
     return error;

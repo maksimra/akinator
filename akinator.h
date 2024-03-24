@@ -50,4 +50,9 @@ void         printing_branches   (Node* node, FILE* file, int* n_space);
 void         print_error         (enum AkError error);
 const char*  get_error           (enum AkError error);
 void         tree_dtor           (Node* root);
+void         graphviz            (Node* node, FILE* file);
+void         draw_left           (Node* node, FILE* file);
+void         draw_right          (Node* node, FILE* file);
+void         print_start         (FILE* file);
+void         print_filling       (Node* node, FILE* file);
 
