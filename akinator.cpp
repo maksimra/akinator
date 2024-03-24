@@ -208,11 +208,12 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
     if (stat (NAME, &statbuf))
         return AK_ERROR_STAT;
 
-    *buffer = (char*) calloc (statbuf.st_size, sizeof (char));
+    *buffer = (char*) calloc (statbuf.st_size + sizeof (char), sizeof (char));
 
     size_t size = 0;
 
     size = fread (*buffer, sizeof (char), statbuf.st_size, file); // тут хорошо функция зайдёт
+    (*buffer)[statbuf.st_size] = '\0';
     assert (size == statbuf.st_size);
     if (size != statbuf.st_size)
         return AK_ERROR_FREAD;
@@ -304,11 +305,15 @@ enum AkError create_tree (char* buffer, Node** cur_node, int* pos)
     if (buffer[*pos] == '(')
     {
         error = create_tree (buffer, &((*cur_node)->right), pos);
+        printf ("pos == %d\n", *pos);
         (*pos)++;
+        printf ("pos == %d\n", *pos);
         *pos += skip_space (buffer + *pos);
+        printf ("pos == %d\n", *pos);
         printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
         printf ("Я здееееееееееесь\n");
         printf ("cur_node->str = %.*s\n", (*cur_node)->len, (*cur_node)->str);
+        printf ("size = %");
         return error;
     }
     return error;
