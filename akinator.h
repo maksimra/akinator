@@ -41,7 +41,7 @@ int          again               (void);
 enum AkError read_tree           (FILE* file, const char* NAME, Node** root, char** buffer);
 enum AkError my_fread            (size_t size, FILE *fp, char** buffer_ptr);
 char*        skip_space          (char* line);
-void create_tree         (char* buffer, Node** cur_node, size_t* pos);
+void         create_tree         (char* buffer, Node** cur_node, size_t* pos);
 void         is_that_true        (Node** current_node);
 void         printf_str          (FILE* file, Node* node, int n_space);
 int          ask_and_proc_answer (const char* str);
