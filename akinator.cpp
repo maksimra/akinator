@@ -1,6 +1,7 @@
 #include "akinator.h"
 
 static FILE* log_file = stderr;
+const static char n_answ = 4;
 
 void set_log_file (FILE* file)
 {
@@ -22,7 +23,10 @@ enum AkError object_search (Node** current_node)
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return AK_FGETS_ERROR;
 
-    if (strncmp (answer, "Yes\n", MAX_SYMB) == 0) // создать константу поменьше локальную
+    if (strlen (answer) >= n_answ)
+            printf ("Некорректный ответ. Часть информации утеряна.\n");
+
+    if (strncmp (answer, "Yes\n", n_answ) == 0) // создать константу поменьше локальную
     {
         *current_node = (*current_node)->left;
     }
@@ -38,35 +42,41 @@ enum AkError object_search (Node** current_node)
     return AK_NO_ERROR;
 }
 
-void printf_str (FILE* file, Node* node)
+void printf_str (FILE* file, Node* node, int n_space)
 {
-    fprintf (file, "(\"%.*s\"",node->len, node->str);
+    fprintf (file, "%*c(\"%.*s\"\n", n_space, ' ', node->len, node->str);
     printf ("(\"%.*s\"",node->len, node->str);
 }
 
-void printing_branches (Node* node, FILE* file)
+void printing_branches (Node* node, FILE* file, int* n_space)
 {
     if (node != NULL)
-        ak_tree_print (node, file);
+    {
+        ak_tree_print (node, file, n_space);
+    }
     else
+    {
         fprintf (file, "_");
+        (*n_space) -= 4;
+    }
 }
 
-void ak_tree_print (Node* node, FILE* file)
+void ak_tree_print (Node* node, FILE* file, int* n_space)
 {
-    printf_str (file, node);
+    printf_str (file, node, *n_space);
+    (*n_space) += 4;
 
-    printing_branches (node->left, file);
-    printing_branches (node->right, file);
+    printing_branches (node->left, file, n_space);
+    printing_branches (node->right, file, n_space);
 
-    fprintf (file, ")");
+    fprintf (file, ")\n");
 }
 
 int ask_and_proc_answer (const char* str)
 {
     printf ("%s", str);
 
-    char answer[MAX_SYMB] = {}; // не через динамику
+    char answer[MAX_SYMB] = {};
 
     if (fgets (answer, MAX_SYMB, stdin) == NULL)
         return -1;
@@ -82,7 +92,9 @@ int ask_and_proc_answer (const char* str)
 
 enum AkError process_riddle (Node* current_node)
 {
-    printf ("%.*s? ", current_node->len, current_node->str); // ассерты для входных параметров
+    assert (current_node != NULL);
+
+    printf ("%.*s? ", current_node->len, current_node->str);
 
     int answer = ask_and_proc_answer ("Did I guess right?\n");
 
@@ -91,7 +103,7 @@ enum AkError process_riddle (Node* current_node)
 
     if (answer == true)
     {
-        printf ("See you soon\n"); // return + delete else
+        printf ("See you soon\n");
         return AK_NO_ERROR;
     }
 
@@ -123,6 +135,8 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
 {
     AkError error = AK_NO_ERROR;
 
+    assert (node != NULL && new_object != NULL && sign != NULL);
+
     char* prev_str = node->str;
     int prev_len  = node->len;
 
@@ -151,6 +165,8 @@ enum AkError insert_branch (Node* node, char* new_object, char* sign)
 
 enum AkError replace_node (Node** node, char* str, int len)
 {
+    assert (str != NULL);
+
     AkError error = AK_NO_ERROR;
     *node = (Node*) calloc (1, sizeof (Node)); // исправить
     if (error != AK_NO_ERROR)
@@ -187,6 +203,8 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
     enum AkError error = AK_NO_ERROR;
     struct stat statbuf = {};
 
+    assert (file != NULL);
+
     if (stat (NAME, &statbuf))
         return AK_ERROR_STAT;
 
@@ -212,6 +230,8 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
 
 void create_tree (char* buffer, Node** cur_node, size_t* pos)
 {
+    assert (buffer != NULL);
+
     create_node (cur_node);
     char str[MAX_SYMB] = {};
     *pos += 2 * sizeof (char);
@@ -243,11 +263,11 @@ void create_tree (char* buffer, Node** cur_node, size_t* pos)
     }
 }
 
-void skip_space (char** line)
+char* skip_space (char* line)
 {
-    for (size_t i = 0; isspace (**line); i++) // переделать
+    while (isspace (*line))
     {
-        (*line)++;
+        line++;
     }
 }
 

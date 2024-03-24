@@ -27,25 +27,26 @@ enum AkError
     AK_INCORRECT_ANSWER,
     AK_FGETS_ERROR,
     AK_PROC_ANSWER_ERROR,
-    AK_ERROR_FREAD
+    AK_ERROR_FREAD,
+    AK_ERROR_READ
 };
 
 enum AkError insert_branch       (Node* node, char* new_object, char* sign);
 enum AkError create_node         (Node** node);
 enum AkError process_riddle      (Node* current_node);
 enum AkError object_search       (Node** current_node);
-void         ak_tree_print       (Node* node, FILE* file);
+void         ak_tree_print       (Node* node, FILE* file, int* n_space);
 void         set_log_file        (FILE* file);
 int          again               (void);
 enum AkError read_tree           (FILE* file, const char* NAME, Node** root, char** buffer);
 enum AkError my_fread            (size_t size, FILE *fp, char** buffer_ptr);
-void         skip_space          (char** line);
-void         create_tree         (char* buffer, Node** cur_node, size_t* pos);
+char*        skip_space          (char* line);
+void create_tree         (char* buffer, Node** cur_node, size_t* pos);
 void         is_that_true        (Node** current_node);
-void         printf_str          (FILE* file, Node* node);
+void         printf_str          (FILE* file, Node* node, int n_space);
 int          ask_and_proc_answer (const char* str);
 enum AkError replace_node        (Node** node, char* str, int len);
-void         printing_branches   (Node* node, FILE* file);
+void         printing_branches   (Node* node, FILE* file, int* n_space);
 void         print_error         (enum AkError error);
 const char*  get_error           (enum AkError error);
 void         tree_dtor           (Node* root);

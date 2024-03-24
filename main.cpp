@@ -5,6 +5,7 @@ int main (const int argc, const char* argv[])
     enum AkError error = AK_NO_ERROR;
     const char* NAME = argv[1];
     char* buffer = NULL;
+    int n_tab = 0;
     FILE* file = fopen (NAME, "a+");
     assert (file != NULL);
     Node* root = NULL;
@@ -23,7 +24,7 @@ int main (const int argc, const char* argv[])
         print_error (error);
     }
     while (again());
-    ak_tree_print (root, file);
+    ak_tree_print (root, file, &n_tab);
     tree_dtor (root);
     free (buffer);
     return 0;
