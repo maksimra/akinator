@@ -220,55 +220,108 @@ enum AkError read_tree (FILE* file, const char* NAME, Node** root, char** buffer
     if (error != AK_NO_ERROR)
         return error;
 
-    size_t pos = 0;
+    int pos = 0;
     Node* cur_node = NULL;
-    create_tree ((*buffer), &cur_node, &pos);
+    error = create_tree ((*buffer), &cur_node, &pos);
+
+    if (error != AK_NO_ERROR)
+        return error;
+
     printf ("cur_node == %p\n", cur_node);
     *root = cur_node;
     return AK_NO_ERROR;
 }
 
-void create_tree (char* buffer, Node** cur_node, size_t* pos)
+enum AkError create_tree (char* buffer, Node** cur_node, int* pos)
 {
     assert (buffer != NULL);
 
+    AkError error = AK_NO_ERROR;
+
     create_node (cur_node);
     char str[MAX_SYMB] = {};
-    *pos += 2 * sizeof (char);
+
+    *pos += skip_space (buffer + *pos);
+
+    if (buffer[*pos] != '(')
+    {
+        printf ("HUUUUI\n");
+        return AK_ERROR_READ;
+    }
+
+    (*pos)++;
+
+    printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
+
+    if (buffer[*pos] != '\"')
+        return AK_ERROR_READ;
+
+    (*pos)++;
+
     char* pos_quotes = strchr (buffer + *pos, '\"'); // если после скобки не ковычка - ошибка
+
+    if (pos_quotes == NULL)
+        return AK_ERROR_READ;
+
     (*cur_node)->str = buffer + *pos; // можно \0 ковычку, чтобы длиной не пользоваться так часто
     (*cur_node)->len = pos_quotes - (buffer + *pos);
     (*cur_node)->existed = true;
     *pos = pos_quotes - buffer + sizeof (char);
+    printf ("pos = %d\n", *pos);
+    printf ("HUUUUI\n");
+
+    printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
+
+    *pos += skip_space (buffer + *pos);
 
     if (buffer[*pos] == '(') // проверяю, что текущий символ откр скобка - если нет - ошибка (или выходить из функции - тогда не нужны нижние подчеркивания)
-        create_tree (buffer, &((*cur_node)->left), pos); //  потом искать ковычки
+    {
+        printf ("HUUUUI\n");
+        error = create_tree (buffer, &((*cur_node)->left), pos); //  потом искать ковычки
+        if (error != AK_NO_ERROR)
+        {
+            printf ("chbck");
+            return AK_ERROR_READ;
+        }
+    }
 
     if (buffer[*pos] == '_')
         (*pos)++;
 
     if (buffer[*pos] == '_')
         (*pos)++;
+
 
     if (buffer[*pos] == ')')
     {
         (*pos)++;
-        return;
+        *pos += skip_space (buffer + *pos);
+        printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
+        printf ("chack");
+        printf ("pos == %d\n", *pos);
+        return error;
     }
     if (buffer[*pos] == '(')
     {
-        create_tree (buffer, &((*cur_node)->right), pos);
+        error = create_tree (buffer, &((*cur_node)->right), pos);
         (*pos)++;
-        return;
+        *pos += skip_space (buffer + *pos);
+        printf ("buffer[%d] = %c\n", *pos, buffer[*pos]);
+        printf ("Я здееееееееееесь\n");
+        printf ("cur_node->str = %.*s\n", (*cur_node)->len, (*cur_node)->str);
+        return error;
     }
+    return error;
 }
 
-char* skip_space (char* line)
+int skip_space (char* line)
 {
-    while (isspace (*line))
+    int n_space = 0;
+    while (isspace (*(line + n_space)))
     {
-        line++;
+        n_space++;
     }
+    return n_space;
 }
 
 void tree_dtor (Node* root)
